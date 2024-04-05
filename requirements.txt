@@ -1,6 +1,6 @@
 streamlit
 plotly.express
-pandas==1.3.3
+pandas
 plotly.graph_objects
 numpy
 statsmodels
