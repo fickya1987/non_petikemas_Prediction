@@ -1,0 +1,10 @@
+streamlit
+plotly.express
+pandas
+os
+warnings
+pickle
+plotly.graph_objects
+numpy
+statsmodels.tsa.statespace.sarimax
+csv
