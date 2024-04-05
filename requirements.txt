@@ -1,9 +1,8 @@
 streamlit
 plotly.express
-pandas
-pickle
+pandas==1.3.3
 plotly.graph_objects
 numpy
-statsmodels.tsa.statespace.sarimax
+statsmodels
 csv
-pandas==1.3.3
+
