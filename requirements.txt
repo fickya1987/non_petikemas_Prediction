@@ -1,7 +1,6 @@
 streamlit
 plotly.express
 pandas
-warnings
 pickle
 plotly.graph_objects
 numpy
