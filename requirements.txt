@@ -1,7 +1,5 @@
 streamlit
-plotly.express
+plotly==5.1.0
 pandas
-plotly.graph_objects
 numpy
 statsmodels
-
