@@ -155,7 +155,7 @@ if app_mode == "Dashboard":
 
     st.subheader('Average Daily Rate (ADR) in Different Cities Across Months')
     adr_by_city_month = adr_by_city_month.sort_values('mmm yy')
-    fig = px.line(adr_by_city_month, x='mmm yy', y='ADR', color='city', markers=True)
+    fig = px.line(adr_by_city_month, x='mmm yy', y='ADR', color='city')
     fig.update_layout(xaxis_title='Month', yaxis_title='ADR', legend_title='City')
     st.plotly_chart(fig, use_container_width=True)
 
