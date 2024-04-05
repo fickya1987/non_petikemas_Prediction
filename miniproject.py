@@ -171,7 +171,7 @@ if app_mode == "Dashboard":
 
     st.subheader('Occupancy % in Different Cities Across Months')
     Occupancy_by_city_month = Occupancy_by_city_month.sort_values('mmm yy')
-    fig = px.line(Occupancy_by_city_month, x='mmm yy', y='Occupancy %', color='city', markers=True)
+    fig = px.line(Occupancy_by_city_month, x='mmm yy', y='Occupancy %', color='city')
     fig.update_layout(xaxis_title='Month', yaxis_title='Occupancy %', legend_title='City')
     st.plotly_chart(fig, use_container_width=True)
 
