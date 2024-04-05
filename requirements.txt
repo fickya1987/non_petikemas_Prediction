@@ -1,7 +1,7 @@
 streamlit
 plotly.express
 pandas
-plotly.graph_objects
+plotly
 numpy
 statsmodels
 csv
