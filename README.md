@@ -21,6 +21,13 @@ To use the interface:
 
 ## Feedback and Contributions
 
-Feedback and contributions are welcome! Feel free to open issues for any suggestions or bugs encountered. If you'd like to contribute, please fork the repository and submit a pull request.
+Feedback and contributions are welcome! Feel free to open issues for any suggestions or bugs encountered. If you'd like to contribute, please fork the repository and submit a pull request. For direct communication, you can email me at [ameyamoddak26@gmail.com](mailto:ameyamoddak26@gmail.com).
+
+## How to Run
+
+To run the interface locally, execute the following command in your terminal:
+
+```bash
+streamlit run miniproject.py --server.port 8000
 
 
