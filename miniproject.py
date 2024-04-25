@@ -14,7 +14,7 @@ st.set_page_config(page_title="Revenue", page_icon=":hotel:", layout="wide")
 
 # Sidebar
 st.sidebar.title("Menu")
-app_mode = st.sidebar.selectbox("Select Page", ["Dashboard", "Prediction", "Future Prediction"])
+app_mode = st.sidebar.selectbox("Select Page", ["Dashboard", "Category-wise Prediction", "Forecast Prediction"])
 
 # Main Page
 if app_mode == "Dashboard":
@@ -265,7 +265,7 @@ elif app_mode == "Prediction":
         return prediction
 
     # Streamlit UI
-    st.title('Hotel Revenue Prediction')
+    st.title('Hotel Category-wise Revenue Prediction')
 
     # Input fields
     room_category = st.selectbox('Room Category', ['Select'] + room_categories)
@@ -335,7 +335,7 @@ elif app_mode == "Future Prediction":
       return forecast
 
     # Main content
-    st.title('Hotel Future Revenue Prediction')
+    st.title('Hotel Forecast Revenue Prediction')
     
     selected_hotel = st.selectbox('Select Hotel', ['Select'] + hotel_category)
 
