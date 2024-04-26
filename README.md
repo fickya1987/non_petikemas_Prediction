@@ -27,6 +27,7 @@ To run the interface locally, execute the following command in your terminal:
 
 ```bash
 streamlit run miniproject.py --server.port 8000
+```
 
 ## Feedback and Contributions
 
