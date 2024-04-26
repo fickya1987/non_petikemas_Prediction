@@ -1,5 +1,7 @@
 # REVENUE PREDICTION INSIGHTS USING SARIMA
 
+Developed by [Ameya Modak](https://www.linkedin.com/in/ameya-modak/).
+
 This repository hosts a comprehensive navigation menu for hotel revenue analytics and predictions. The interface consists of three key sections:
 
 1. **Dashboard**: The central hub furnishing insightful revenue analytics for hotels. It provides a comprehensive overview of key performance indicators such as Total Revenue, Revenue by Room type, Daytype wise Revenue, Property wise Revenue, Occupancy, and ADR. Users can customize data display using filters for Hotel, City, Room Class, Start Date, and End Date. Real-time updates are facilitated through CSV file uploads, enabling dynamic analysis and data-driven decision-making. [Live Preview](https://hotelrevenueprediction.streamlit.app/)
