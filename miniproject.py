@@ -234,7 +234,7 @@ if app_mode == "Dashboard":
 
 
 # About Project
-elif app_mode == "Prediction":
+elif app_mode == "Category-wise Prediction":
     import streamlit as st
     import numpy as np
     import pickle
@@ -294,7 +294,7 @@ elif app_mode == "Prediction":
 
 
 # Prediction Page
-elif app_mode == "Future Prediction":
+elif app_mode == "Forecast Prediction":
   
     import streamlit as st
     import pandas as pd
