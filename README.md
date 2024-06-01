@@ -4,7 +4,7 @@ Developed by [Ameya Modak](https://www.linkedin.com/in/ameya-modak/).
 
 This repository hosts a comprehensive navigation menu for hotel revenue analytics and predictions. The interface consists of three key sections:
 
-1. **Dashboard**: The central hub furnishing insightful revenue analytics for hotels. It provides a comprehensive overview of key performance indicators such as Total Revenue, Revenue by Room type, Daytype wise Revenue, Property wise Revenue, Occupancy, and ADR. Users can customize data display using filters for Hotel, City, Room Class, Start Date, and End Date. Real-time updates are facilitated through CSV file uploads, enabling dynamic analysis and data-driven decision-making. [Live Preview](https://hotelrevenueprediction.streamlit.app/)
+1. **Dashboard**: The central hub furnishing insightful revenue analytics for hotels. It provides a comprehensive overview of key performance indicators such as Total Revenue, Revenue by Room type, Daytype wise Revenue, Property wise Revenue, Occupancy, and ADR. Users can customize data display using filters for Hotel, City, Room Class, Start Date, and End Date. Real-time updates are facilitated through CSV file uploads, enabling dynamic analysis and data-driven decision-making. [Live Preview](https://revenuepredictioninsights.streamlit.app/)
 
 2. **Prediction**: Empowers users with category-specific forecasts, allowing input parameters like room category, property name, Category, City, and Room Class. By offering precise predictions tailored to different segments, stakeholders can anticipate revenue outcomes with greater accuracy and make informed decisions for each category within the hotel's offerings.
 
@@ -16,7 +16,7 @@ This interface provides a holistic view of revenue performance, tailored predict
 
 To use the interface:
 
-1. Visit the [Live Preview](https://hotelrevenueprediction.streamlit.app/) link.
+1. Visit the [Live Preview](https://revenuepredictioninsights.streamlit.app/) link.
 2. Navigate through the Dashboard, Prediction, and Forecast Prediction sections using the provided tabs.
 3. Customize data display using the available filters and input parameters.
 4. Download forecasted datasets for further analysis or integration into planning processes.
