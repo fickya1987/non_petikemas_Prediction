@@ -1,7 +1,7 @@
 streamlit
 plotly==5.1.0
 pandas
-numpy
+numpy==1.21.0
 statsmodels
 matplotlib
 plotly.express
