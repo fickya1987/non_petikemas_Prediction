@@ -19,7 +19,7 @@ app_mode = st.sidebar.selectbox("Select Page", ["Dashboard", "Category-wise Pred
 # Main Page
 if app_mode == "Dashboard":
     st.title(":hotel: Hotel Revenue Analysis")
-    st.markdown('<style>div.block-container{padding-top:1rem;}</style>', unsafe_allow_html=True)
+    st.markdown('<style>div.block-container{padding-top:2rem;}</style>', unsafe_allow_html=True)
 
 
     fl = st.file_uploader(":file_folder: Upload a file", type=(["csv", "txt", "xlsx", "xls"]))
