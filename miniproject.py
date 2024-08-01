@@ -383,3 +383,4 @@ elif app_mode == "Forecast Prediction":
       # Provide download link for CSV
       csv_data = forecast_df.to_csv(index=False)
       st.download_button(label="Download Predicted Revenue", data=csv_data, file_name='predicted_revenue.csv', mime='text/csv')
+
