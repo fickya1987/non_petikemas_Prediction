@@ -4,7 +4,7 @@ pandas==1.5.3
 numpy==1.24.4
 statsmodels==0.14.0
 matplotlib==3.7.2
-plotly.express==0.7.0
 catboost==1.1.1
 setuptools==65.5.0
 wheel==0.40.0
+
