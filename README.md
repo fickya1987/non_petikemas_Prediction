@@ -12,17 +12,17 @@ This repository hosts a comprehensive navigation menu for hotel revenue analytic
 
 This interface provides a holistic view of revenue performance, tailored predictions, and actionable insights, facilitating informed decision-making for optimizing revenue generation in the hotel industry.
 
-#Project Preview 
+# Project Preview 
 
-##Dashboard
+## Dashboard
 
 ![Screenshot 2024-08-07 231341](https://github.com/user-attachments/assets/f7fb4729-ae95-4017-a7c2-34725c61ea6d)
 
-##Category-wise Prediction
+## Category-wise Prediction
 
 ![Screenshot 2024-08-07 231757](https://github.com/user-attachments/assets/ae5c6197-4218-4a04-ae0c-5bc35470245e)
 
-##Forecast Prediction
+## Forecast Prediction
 
 ![Screenshot 2024-08-07 231954](https://github.com/user-attachments/assets/df676c3a-c328-48f6-938e-e80e91b9c84a)
 
