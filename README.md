@@ -4,7 +4,7 @@ Developed by [Ameya Modak](https://www.linkedin.com/in/ameya-modak/).
 
 This repository hosts a comprehensive navigation menu for hotel revenue analytics and predictions. The interface consists of three key sections:
 
-1. **Dashboard**: The central hub furnishing insightful revenue analytics for hotels. It provides a comprehensive overview of key performance indicators such as Total Revenue, Revenue by Room type, Daytype wise Revenue, Property wise Revenue, Occupancy, and ADR. Users can customize data display using filters for Hotel, City, Room Class, Start Date, and End Date. Real-time updates are facilitated through CSV file uploads, enabling dynamic analysis and data-driven decision-making. [Live Preview](https://hotelrevenueinsights.streamlit.app/)
+1. **Dashboard**: The central hub furnishing insightful revenue analytics for hotels. It provides a comprehensive overview of key performance indicators such as Total Revenue, Revenue by Room type, Daytype wise Revenue, Property wise Revenue, Occupancy, and ADR. Users can customize data display using filters for Hotel, City, Room Class, Start Date, and End Date. Real-time updates are facilitated through CSV file uploads, enabling dynamic analysis and data-driven decision-making. [Live View](https://hotelrevenueinsights.streamlit.app/)
 
 2. **Category-wise Prediction**: Empowers users with category-specific forecasts, allowing input parameters like room category, property name, Category, City, and Room Class. By offering precise predictions tailored to different segments, stakeholders can anticipate revenue outcomes with greater accuracy and make informed decisions for each category within the hotel's offerings.
 
@@ -12,7 +12,7 @@ This repository hosts a comprehensive navigation menu for hotel revenue analytic
 
 This interface provides a holistic view of revenue performance, tailored predictions, and actionable insights, facilitating informed decision-making for optimizing revenue generation in the hotel industry.
 
-# Project Preview 
+# Project View
 
 ## Dashboard
 
