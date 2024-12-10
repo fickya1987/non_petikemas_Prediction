@@ -2,7 +2,20 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from statsmodels.tsa.statespace.sarimax import SARIMAX
+from dotenv import load_dotenv
+import openai
+import os
 import warnings
+
+# Load environment variables
+load_dotenv()
+
+# Set OpenAI API key
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+# Check if API key exists
+if not openai.api_key:
+    raise ValueError("API Key OpenAI tidak ditemukan. Harap tambahkan ke file .env.")
 
 warnings.filterwarnings('ignore')
 
@@ -21,6 +34,30 @@ def load_data(file):
     else:
         st.error("Format file tidak didukung. Harap unggah file .csv atau .xlsx.")
         return None
+
+# Fungsi untuk analisis AI
+def generate_ai_analysis(data, context):
+    """
+    Generate AI analysis using GPT-4 based on the provided data and context.
+    """
+    try:
+        # Convert data to a summarized string
+        data_summary = data.to_string(index=False, max_rows=5)  # Show only top 5 rows
+        prompt = (
+            f"Berikan analisis naratif berdasarkan data berikut:\n\n"
+            f"{data_summary}\n\n"
+            f"Konsep: {context}. Tuliskan analisis dengan narasi yang jelas dan terstruktur."
+        )
+        # Call OpenAI GPT-4 API
+        response = openai.Completion.create(
+            engine="text-davinci-003",
+            prompt=prompt,
+            max_tokens=500,
+            temperature=0.7
+        )
+        return response.choices[0].text.strip()
+    except Exception as e:
+        return f"Terjadi kesalahan saat memproses analisis AI: {e}"
 
 # Fungsi utama untuk memfilter dan menampilkan data
 def filter_data(data):
@@ -68,11 +105,11 @@ if menu == "Dashboard":
                             st.write(f"Data yang Difilter (Satuan: {selected_satuan}):")
                             st.write(data_filtered)
 
-                            if 'Terminal' in data_filtered.columns and 'Value' in data_filtered.columns:
-                                terminal_volume = data_filtered.groupby('Terminal')['Value'].sum().reset_index()
-                                st.subheader(f"Volume Total Berdasarkan Terminal (Satuan: {selected_satuan})")
-                                fig = px.bar(terminal_volume, x='Terminal', y='Value', text='Value', template='plotly_white')
-                                st.plotly_chart(fig, use_container_width=True)
+                            # Tombol untuk Analisis AI
+                            if st.button("Generate AI Analysis - Dashboard"):
+                                ai_analysis = generate_ai_analysis(data_filtered, "Dashboard - Analisis Data Non Petikemas")
+                                st.subheader("Hasil Analisis AI:")
+                                st.write(ai_analysis)
 
 # Analisis Terminal
 elif menu == "Analisis Terminal":
@@ -109,11 +146,11 @@ elif menu == "Analisis Terminal":
                                 st.write(f"Data untuk Terminal '{selected_terminal}' (Satuan: {selected_satuan}):")
                                 st.write(terminal_data)
 
-                                if 'Value' in terminal_data.columns and 'Date' in terminal_data.columns:
-                                    volume_by_date = terminal_data.groupby('Date')['Value'].sum().reset_index()
-                                    st.subheader(f"Volume Harian untuk Terminal '{selected_terminal}' (Satuan: {selected_satuan})")
-                                    fig = px.line(volume_by_date, x='Date', y='Value', markers=True, template='plotly_white')
-                                    st.plotly_chart(fig, use_container_width=True)
+                                # Tombol untuk Analisis AI
+                                if st.button("Generate AI Analysis - Terminal"):
+                                    ai_analysis = generate_ai_analysis(terminal_data, f"Analisis Terminal {selected_terminal}")
+                                    st.subheader("Hasil Analisis AI:")
+                                    st.write(ai_analysis)
 
 # Visualisasi Berdasarkan Kategori
 elif menu == "Visualisasi Berdasarkan Kategori":
@@ -146,6 +183,12 @@ elif menu == "Visualisasi Berdasarkan Kategori":
                             st.subheader(f"Volume Berdasarkan {selected_kategori} (Satuan: {selected_satuan})")
                             fig = px.pie(category_data, values='Value', names=selected_kategori, template='plotly_white')
                             st.plotly_chart(fig, use_container_width=True)
+
+                            # Tombol untuk Analisis AI
+                            if st.button(f"Generate AI Analysis - {selected_kategori}"):
+                                ai_analysis = generate_ai_analysis(category_data, f"Visualisasi Berdasarkan {selected_kategori}")
+                                st.subheader("Hasil Analisis AI:")
+                                st.write(ai_analysis)
 
 # Prediction
 elif menu == "Prediction":
@@ -202,13 +245,12 @@ elif menu == "Prediction":
                                     st.subheader(f"Hasil Prediksi untuk Terminal '{selected_terminal}' (Satuan: {selected_satuan})")
                                     st.write(forecast_df)
 
-                                    fig = px.line(forecast_df, x='Date', y='Predicted Value', title=f"Prediksi ({selected_terminal}, {selected_satuan})")
-                                    fig.add_scatter(x=forecast_df['Date'], y=forecast_df['Lower Bound'], mode='lines', name='Lower Bound', line=dict(dash='dot'))
-                                    fig.add_scatter(x=forecast_df['Date'], y=forecast_df['Upper Bound'], mode='lines', name='Upper Bound', line=dict(dash='dot'))
-                                    st.plotly_chart(fig, use_container_width=True)
-
-                                    csv = forecast_df.to_csv(index=False).encode('utf-8')
-                                    st.download_button(f"Unduh Prediksi Terminal '{selected_terminal}' dan Satuan '{selected_satuan}'", data=csv, file_name=f"forecast_{selected_terminal}_{selected_satuan}.csv", mime="text/csv")
+                                    # Tombol untuk Analisis AI
+                                    if st.button("Generate AI Analysis - Prediction"):
+                                        ai_analysis = generate_ai_analysis(forecast_df, f"Prediksi untuk Terminal {selected_terminal} (Satuan: {selected_satuan})")
+                                        st.subheader("Hasil Analisis AI:")
+                                        st.write(ai_analysis)
                                 except Exception as e:
                                     st.error(f"Terjadi kesalahan dalam proses prediksi: {e}")
+
 
