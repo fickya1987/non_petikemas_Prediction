@@ -219,5 +219,14 @@ elif menu == "Prediction":
                         st.write(forecast_df)
 
                         fig = px.line(forecast_df, x='Date', y='Predicted Value', title=f"Prediksi Data {category}")
-                        fig.add_scatter(x=forecast_df['Date'], y=forecast_df['Lower Bound'], mode='lines', name='Lower Bound
+                        fig.add_scatter(x=forecast_df['Date'], y=forecast_df['Lower Bound'], mode='lines', name='Lower Bound', line=dict(dash='dot'))
+                        fig.add_scatter(x=forecast_df['Date'], y=forecast_df['Upper Bound'], mode='lines', name='Upper Bound', line=dict(dash='dot'))
+                        st.plotly_chart(fig, use_container_width=True)
 
+                        # Tombol untuk Analisis AI
+                        if st.button(f"Generate AI Analysis - Prediction ({category})"):
+                            ai_analysis = generate_ai_analysis(forecast_df, f"Prediksi Data {category}")
+                            st.subheader("Hasil Analisis AI:")
+                            st.write(ai_analysis)
+                    except Exception as e:
+                        st.error(f"Terjadi kesalahan dalam proses prediksi: {e}")
