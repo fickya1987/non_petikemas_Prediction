@@ -202,7 +202,6 @@ elif menu == "Visualisasi Berdasarkan Kategori":
                                 st.subheader("Hasil Analisis AI:")
                                 st.write(ai_analysis)
 
-
 # Prediction
 elif menu == "Prediction":
     st.title("Prediksi Data Non Petikemas per Terminal dan Satuan")
@@ -281,5 +280,12 @@ elif menu == "Prediction":
                                         st.plotly_chart(fig, use_container_width=True)
 
                                         # Tombol untuk Analisis AI
+                                        if st.button("Generate AI Analysis - Prediction"):
+                                            ai_analysis = generate_ai_analysis(forecast_df, f"Prediksi untuk Terminal {selected_terminal} (Satuan: {selected_satuan})")
+                                            st.subheader("Hasil Analisis AI:")
+                                            st.write(ai_analysis)
+                                    except Exception as e:
+                                        st.error(f"Terjadi kesalahan dalam proses prediksi: {e}")
+
                 
 
