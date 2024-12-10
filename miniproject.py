@@ -36,75 +36,116 @@ st.set_page_config(page_title="Petikemas dan Non-Petikemas Analysis", layout="wi
 # Sidebar
 st.sidebar.title("Menu")
 category = st.sidebar.radio("Pilih Kategori", ["Petikemas", "Non-Petikemas"])
-menu = st.sidebar.selectbox("Pilih Menu", ["Dashboard", "Prediction"])
+menu = st.sidebar.selectbox("Pilih Menu", ["Dashboard", "Analisis Terminal", "Visualisasi Berdasarkan Kategori", "Prediction"])
 
-# Load data based on category
-if category == "Petikemas":
-    file_path = "adjusted_petikemas_priok_data.csv"
-else:
-    file_path = "adjusted_non_petikemas_priok_data.csv"
-
-# Load the data
-try:
-    data = pd.read_csv(file_path)
-    data['Date'] = pd.to_datetime(data['Date'], format='%d/%m/%Y %H:%M', errors='coerce')
-    data = data.dropna(subset=['Date'])  # Drop rows with invalid dates
-except Exception as e:
-    st.error(f"Terjadi kesalahan saat memuat data: {e}")
-    data = None
+# Fungsi untuk membaca data dari file
+def load_data(file):
+    if file.name.endswith('.csv'):
+        return pd.read_csv(file)
+    elif file.name.endswith('.xlsx'):
+        return pd.read_excel(file)
+    else:
+        st.error("Format file tidak didukung. Harap unggah file .csv atau .xlsx.")
+        return None
 
 # Dashboard
-if menu == "Dashboard" and data is not None:
+if menu == "Dashboard":
     st.title(f"Analisis Data {category}")
-    st.write("Data berhasil dimuat!")
+    uploaded_file = st.file_uploader("Unggah File Data (.csv atau .xlsx)", type=["csv", "xlsx"])
 
-    if 'Satuan' not in data.columns:
-        st.error("Kolom 'Satuan' tidak ditemukan pada file.")
-    else:
-        satuan_list = data['Satuan'].unique()
-        selected_satuan = st.sidebar.selectbox("Pilih Satuan", satuan_list)
+    if uploaded_file is not None:
+        data = load_data(uploaded_file)
+        if data is not None:
+            st.write("Data berhasil dimuat!")
 
-        if selected_satuan:
-            data_filtered = data[data['Satuan'] == selected_satuan]
-
-            min_date = data_filtered['Date'].min()
-            max_date = data_filtered['Date'].max()
-            st.sidebar.write(f"Rentang Tanggal: {min_date.strftime('%d/%m/%Y')} - {max_date.strftime('%d/%m/%Y')}")
-
-            start_date = st.sidebar.date_input("Mulai Tanggal", min_date)
-            end_date = st.sidebar.date_input("Akhir Tanggal", max_date)
-
-            data_filtered = data_filtered[(data_filtered['Date'] >= pd.Timestamp(start_date)) & 
-                                           (data_filtered['Date'] <= pd.Timestamp(end_date))]
-
-            if data_filtered.empty:
-                st.warning("Tidak ada data yang sesuai dengan rentang tanggal dan satuan yang dipilih.")
+            if 'Date' not in data.columns or 'Satuan' not in data.columns:
+                st.error("Kolom 'Date' atau 'Satuan' tidak ditemukan pada file yang diunggah.")
             else:
-                st.write(f"Data yang Difilter (Satuan: {selected_satuan}):")
-                st.write(data_filtered)
+                data['Date'] = pd.to_datetime(data['Date'], format='%d/%m/%Y %H:%M', errors='coerce')
+                data = data.dropna(subset=['Date'])
+
+                satuan_list = data['Satuan'].unique()
+                selected_satuan = st.sidebar.selectbox("Pilih Satuan", satuan_list)
+
+                if selected_satuan:
+                    data_filtered = data[data['Satuan'] == selected_satuan]
+
+                    min_date = data_filtered['Date'].min()
+                    max_date = data_filtered['Date'].max()
+                    st.sidebar.write(f"Rentang Tanggal: {min_date.strftime('%d/%m/%Y')} - {max_date.strftime('%d/%m/%Y')}")
+
+                    start_date = st.sidebar.date_input("Mulai Tanggal", min_date)
+                    end_date = st.sidebar.date_input("Akhir Tanggal", max_date)
+
+                    data_filtered = data_filtered[(data_filtered['Date'] >= pd.Timestamp(start_date)) & 
+                                                   (data_filtered['Date'] <= pd.Timestamp(end_date))]
+
+                    if data_filtered.empty:
+                        st.warning("Tidak ada data yang sesuai dengan rentang tanggal dan satuan yang dipilih.")
+                    else:
+                        st.write(f"Data yang Difilter (Satuan: {selected_satuan}):")
+                        st.write(data_filtered)
+
+# Analisis Terminal
+elif menu == "Analisis Terminal":
+    st.title(f"Analisis Terminal {category}")
+    uploaded_file = st.file_uploader("Unggah File Data (.csv atau .xlsx)", type=["csv", "xlsx"])
+
+    if uploaded_file is not None:
+        data = load_data(uploaded_file)
+        if data is not None:
+            st.write("Data berhasil dimuat!")
+
+            if 'Terminal' not in data.columns or 'Value' not in data.columns:
+                st.error("Kolom 'Terminal' atau 'Value' tidak ditemukan pada file yang diunggah.")
+            else:
+                terminal_list = data['Terminal'].unique()
+                selected_terminal = st.sidebar.selectbox("Pilih Terminal", terminal_list)
+
+                if selected_terminal:
+                    terminal_data = data[data['Terminal'] == selected_terminal]
+
+                    if terminal_data.empty:
+                        st.warning(f"Tidak ada data untuk terminal '{selected_terminal}'.")
+                    else:
+                        st.write(f"Data untuk Terminal '{selected_terminal}':")
+                        st.write(terminal_data)
+
+# Visualisasi Berdasarkan Kategori
+elif menu == "Visualisasi Berdasarkan Kategori":
+    st.title(f"Visualisasi Berdasarkan Kategori {category}")
+    uploaded_file = st.file_uploader("Unggah File Data (.csv atau .xlsx)", type=["csv", "xlsx"])
+
+    if uploaded_file is not None:
+        data = load_data(uploaded_file)
+        if data is not None:
+            st.write("Data berhasil dimuat!")
+
+            kategori_list = ['JenisKargo', 'JenisKemasan', 'JenisKegiatan']
+            selected_kategori = st.sidebar.selectbox("Pilih Kategori", kategori_list)
+
+            if selected_kategori in data.columns:
+                category_data = data.groupby(selected_kategori)['Value'].sum().reset_index()
+                st.subheader(f"Volume Berdasarkan {selected_kategori}")
+                fig = px.pie(category_data, values='Value', names=selected_kategori, template='plotly_white')
+                st.plotly_chart(fig, use_container_width=True)
 
 # Prediction
-elif menu == "Prediction" and data is not None:
+elif menu == "Prediction":
     st.title(f"Prediksi Data {category}")
-    st.write("Data berhasil dimuat!")
+    uploaded_file = st.file_uploader("Unggah File Data (.csv atau .xlsx)", type=["csv", "xlsx"])
 
-    required_columns = ['Date', 'Satuan', 'Value']
-    missing_columns = [col for col in required_columns if col not in data.columns]
-    if missing_columns:
-        st.error(f"Kolom berikut tidak ditemukan: {', '.join(missing_columns)}")
-    else:
-        satuan_list = data['Satuan'].unique()
-        selected_satuan = st.sidebar.selectbox("Pilih Satuan", satuan_list)
+    if uploaded_file is not None:
+        data = load_data(uploaded_file)
+        if data is not None:
+            st.write("Data berhasil dimuat!")
 
-        if selected_satuan:
-            data_satuan = data[data['Satuan'] == selected_satuan]
-            data_satuan = data_satuan.sort_values('Date')
-
-            data_grouped = data_satuan.groupby('Date')['Value'].sum().reset_index()
-
-            if data_grouped.empty:
-                st.warning("Data kosong setelah diproses. Harap periksa file.")
+            if 'Date' not in data.columns or 'Value' not in data.columns:
+                st.error("Kolom 'Date' atau 'Value' tidak ditemukan pada file yang diunggah.")
             else:
+                data['Date'] = pd.to_datetime(data['Date'], format='%d/%m/%Y %H:%M', errors='coerce')
+                data_grouped = data.groupby('Date')['Value'].sum().reset_index()
+
                 if len(data_grouped) < 12:
                     st.error("Data terlalu sedikit untuk prediksi. Tambahkan data dengan rentang waktu yang lebih panjang.")
                 else:
@@ -136,3 +177,4 @@ elif menu == "Prediction" and data is not None:
                         st.plotly_chart(fig, use_container_width=True)
                     except Exception as e:
                         st.error(f"Terjadi kesalahan dalam proses prediksi: {e}")
+
