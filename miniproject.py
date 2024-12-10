@@ -64,8 +64,8 @@ def generate_ai_analysis(data, context):
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=messages,
-            max_tokens=8192,
-            temperature=1.5
+            max_tokens=2048,
+            temperature=1.0
         )
         return response['choices'][0]['message']['content'].strip()
     except Exception as e:
