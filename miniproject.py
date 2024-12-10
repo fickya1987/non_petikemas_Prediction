@@ -43,15 +43,49 @@ if menu == "Dashboard":
         data = load_data(uploaded_file)
         if data is not None:
             st.write("Data berhasil dimuat!")
-            filtered_data = filter_data(data)
-            st.write(filtered_data)
 
-            # Visualisasi nilai total per terminal
-            if 'Terminal' in filtered_data.columns and 'Value' in filtered_data.columns:
-                terminal_volume = filtered_data.groupby('Terminal')['Value'].sum().reset_index()
-                st.subheader("Volume Total Berdasarkan Terminal")
-                fig = px.bar(terminal_volume, x='Terminal', y='Value', text='Value', template='plotly_white')
-                st.plotly_chart(fig, use_container_width=True)
+            # Periksa apakah kolom 'Date' ada di data
+            if 'Date' not in data.columns:
+                st.error("Kolom 'Date' tidak ditemukan pada file yang diunggah. Harap pastikan file memiliki kolom 'Date'.")
+            else:
+                # Konversi kolom 'Date' ke format datetime
+                data['Date'] = pd.to_datetime(data['Date'], format='%d/%m/%Y %H:%M', errors='coerce')
+                
+                # Hapus baris dengan tanggal tidak valid
+                data = data.dropna(subset=['Date'])
+                
+                if data.empty:
+                    st.warning("Data kosong setelah diproses. Harap periksa apakah kolom 'Date' memiliki format yang benar.")
+                else:
+                    # Tampilkan rentang tanggal yang tersedia
+                    min_date = data['Date'].min()
+                    max_date = data['Date'].max()
+                    st.sidebar.write(f"Rentang Tanggal: {min_date.strftime('%d/%m/%Y')} - {max_date.strftime('%d/%m/%Y')}")
+
+                    # Pilih rentang tanggal
+                    start_date = st.sidebar.date_input("Mulai Tanggal", min_date)
+                    end_date = st.sidebar.date_input("Akhir Tanggal", max_date)
+
+                    # Filter data berdasarkan rentang tanggal
+                    filtered_data = data[(data['Date'] >= pd.Timestamp(start_date)) & (data['Date'] <= pd.Timestamp(end_date))]
+
+                    if filtered_data.empty:
+                        st.warning("Tidak ada data yang sesuai dengan rentang tanggal yang dipilih.")
+                    else:
+                        st.write("Data yang Difilter:")
+                        st.write(filtered_data)
+
+                        # Visualisasi nilai total per terminal
+                        if 'Terminal' in filtered_data.columns and 'Value' in filtered_data.columns:
+                            terminal_volume = filtered_data.groupby('Terminal')['Value'].sum().reset_index()
+                            st.subheader("Volume Total Berdasarkan Terminal")
+                            fig = px.bar(terminal_volume, x='Terminal', y='Value', text='Value', template='plotly_white')
+                            st.plotly_chart(fig, use_container_width=True)
+
+
+
+
+
 
 # Analisis Terminal
 elif menu == "Analisis Terminal":
