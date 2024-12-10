@@ -2,10 +2,22 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from statsmodels.tsa.statespace.sarimax import SARIMAX
-from dotenv import load_dotenv
-import openai
+import subprocess
 import os
 import warnings
+
+# Install required libraries if not already installed
+try:
+    import openai
+except ModuleNotFoundError:
+    subprocess.check_call(["pip", "install", "openai"])
+    import openai
+
+try:
+    from dotenv import load_dotenv
+except ModuleNotFoundError:
+    subprocess.check_call(["pip", "install", "python-dotenv"])
+    from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
@@ -35,7 +47,7 @@ def load_data(file):
         st.error("Format file tidak didukung. Harap unggah file .csv atau .xlsx.")
         return None
 
-# Fungsi untuk analisis AI
+# Fungsi untuk analisis AI menggunakan GPT-4
 def generate_ai_analysis(data, context):
     """
     Generate AI analysis using GPT-4 based on the provided data and context.
@@ -43,19 +55,19 @@ def generate_ai_analysis(data, context):
     try:
         # Convert data to a summarized string
         data_summary = data.to_string(index=False, max_rows=5)  # Show only top 5 rows
-        prompt = (
-            f"Berikan analisis naratif berdasarkan data berikut:\n\n"
-            f"{data_summary}\n\n"
-            f"Konsep: {context}. Tuliskan analisis dengan narasi yang jelas dan terstruktur."
-        )
+        messages = [
+            {"role": "system", "content": "Anda adalah seorang analis data yang mahir."},
+            {"role": "user", "content": f"Berikan analisis naratif berdasarkan data berikut:\n\n{data_summary}\n\n"
+                                         f"Konsep: {context}. Tuliskan analisis dengan narasi yang jelas dan terstruktur."}
+        ]
         # Call OpenAI GPT-4 API
-        response = openai.Completion.create(
-            engine="text-davinci-003",
-            prompt=prompt,
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=messages,
             max_tokens=500,
             temperature=0.7
         )
-        return response.choices[0].text.strip()
+        return response['choices'][0]['message']['content'].strip()
     except Exception as e:
         return f"Terjadi kesalahan saat memproses analisis AI: {e}"
 
@@ -190,67 +202,5 @@ elif menu == "Visualisasi Berdasarkan Kategori":
                                 st.subheader("Hasil Analisis AI:")
                                 st.write(ai_analysis)
 
-# Prediction
-elif menu == "Prediction":
-    st.title("Prediksi Data Non Petikemas per Terminal dan Satuan")
-    uploaded_file = st.file_uploader("Unggah File Data (.csv atau .xlsx)", type=["csv", "xlsx"])
-
-    if uploaded_file is not None:
-        data = load_data(uploaded_file)
-        if data is not None:
-            st.write("Data berhasil dimuat!")
-
-            if 'Date' not in data.columns or 'Terminal' not in data.columns or 'Satuan' not in data.columns:
-                st.error("Kolom 'Date', 'Terminal', atau 'Satuan' tidak ditemukan pada file yang diunggah.")
-            else:
-                data = filter_data(data)
-
-                if data.empty:
-                    st.warning("Data kosong setelah diproses. Harap periksa format data.")
-                else:
-                    satuan_list = data['Satuan'].unique()
-                    selected_satuan = st.sidebar.selectbox("Pilih Satuan", satuan_list)
-
-                    if selected_satuan:
-                        data_satuan = data[data['Satuan'] == selected_satuan]
-                        terminal_list = data_satuan['Terminal'].unique()
-                        selected_terminal = st.selectbox("Pilih Terminal", terminal_list)
-
-                        if selected_terminal:
-                            terminal_data = data_satuan[data_satuan['Terminal'] == selected_terminal]
-
-                            if terminal_data.empty:
-                                st.warning(f"Data kosong untuk terminal '{selected_terminal}' dengan satuan '{selected_satuan}'.")
-                            else:
-                                data_grouped = terminal_data.groupby('Date')['Value'].sum().reset_index()
-
-                                forecast_period = st.number_input("Masukkan periode prediksi (dalam bulan)", min_value=1, max_value=24, value=6, step=1)
-
-                                try:
-                                    model = SARIMAX(data_grouped['Value'], order=(1, 1, 1), seasonal_order=(1, 1, 0, 12), enforce_stationarity=False, enforce_invertibility=False)
-                                    results = model.fit()
-
-                                    future = results.get_forecast(steps=forecast_period)
-                                    forecast = future.predicted_mean
-                                    conf_int = future.conf_int()
-
-                                    forecast_dates = pd.date_range(start=data_grouped['Date'].iloc[-1], periods=forecast_period + 1, freq='M')[1:]
-                                    forecast_df = pd.DataFrame({
-                                        'Date': forecast_dates,
-                                        'Predicted Value': forecast.values,
-                                        'Lower Bound': conf_int.iloc[:, 0].values,
-                                        'Upper Bound': conf_int.iloc[:, 1].values
-                                    })
-
-                                    st.subheader(f"Hasil Prediksi untuk Terminal '{selected_terminal}' (Satuan: {selected_satuan})")
-                                    st.write(forecast_df)
-
-                                    # Tombol untuk Analisis AI
-                                    if st.button("Generate AI Analysis - Prediction"):
-                                        ai_analysis = generate_ai_analysis(forecast_df, f"Prediksi untuk Terminal {selected_terminal} (Satuan: {selected_satuan})")
-                                        st.subheader("Hasil Analisis AI:")
-                                        st.write(ai_analysis)
-                                except Exception as e:
-                                    st.error(f"Terjadi kesalahan dalam proses prediksi: {e}")
 
 
