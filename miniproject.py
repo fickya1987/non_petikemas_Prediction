@@ -207,4 +207,14 @@ elif menu == "Prediction":
                             'Predicted Value': forecast.values,
                             'Lower Bound': conf_int.iloc[:, 0].values,
                             'Upper Bound': conf_int.iloc[:, 1].values
+                        })
 
+                        st.subheader("Hasil Prediksi")
+                        st.write(forecast_df)
+
+                        fig = px.line(forecast_df, x='Date', y='Predicted Value', title=f"Prediksi Data {category}")
+                        fig.add_scatter(x=forecast_df['Date'], y=forecast_df['Lower Bound'], mode='lines', name='Lower Bound', line=dict(dash='dot'))
+                        fig.add_scatter(x=forecast_df['Date'], y=forecast_df['Upper Bound'], mode='lines', name='Upper Bound', line=dict(dash='dot'))
+                        st.plotly_chart(fig, use_container_width=True)
+                    except Exception as e:
+                        st.error(f"Terjadi kesalahan dalam proses prediksi: {e}")
