@@ -35,7 +35,7 @@ warnings.filterwarnings('ignore')
 st.set_page_config(page_title="Analytical Dashboard TKMP Pelindo", layout="wide")
 
 # Header with logo and title
-st.image("pelindo_logo.png", use_column_width=True)  # Replace with the actual path to the Pelindo logo
+st.image("pelindo_logo.jfif", use_column_width=True)  # Replace with the actual path to the Pelindo logo
 st.title("Analytical Dashboard TKMP Pelindo")
 st.markdown("---")
 
