@@ -96,10 +96,9 @@ elif menu == "Visualisasi Berdasarkan Kategori":
                 st.plotly_chart(fig, use_container_width=True)
 
 
-
-# Prediction
+# Prediction per Terminal
 elif menu == "Prediction":
-    st.title("Prediksi Data Non Petikemas")
+    st.title("Prediksi Data Non Petikemas per Terminal")
     uploaded_file = st.file_uploader("Unggah File Data (.csv atau .xlsx)", type=["csv", "xlsx"])
 
     if uploaded_file is not None:
@@ -107,9 +106,9 @@ elif menu == "Prediction":
         if data is not None:
             st.write("Data berhasil dimuat!")
 
-            # Periksa apakah kolom 'Date' ada di data
-            if 'Date' not in data.columns:
-                st.error("Kolom 'Date' tidak ditemukan pada file yang diunggah. Harap pastikan file memiliki kolom 'Date'.")
+            # Periksa apakah kolom 'Date' dan 'Terminal' ada di data
+            if 'Date' not in data.columns or 'Terminal' not in data.columns:
+                st.error("Kolom 'Date' atau 'Terminal' tidak ditemukan pada file yang diunggah. Harap pastikan file memiliki kedua kolom tersebut.")
             else:
                 # Konversi kolom 'Date' ke format datetime
                 data['Date'] = pd.to_datetime(data['Date'], format='%d/%m/%Y %H:%M', errors='coerce')
@@ -120,53 +119,58 @@ elif menu == "Prediction":
                 if data.empty:
                     st.warning("Data kosong setelah diproses. Harap periksa apakah kolom 'Date' memiliki format yang benar.")
                 else:
-                    # Urutkan data berdasarkan tanggal
-                    data = data.sort_values('Date')
+                    # Pilih terminal untuk dilakukan prediksi
+                    terminal_list = data['Terminal'].unique()
+                    selected_terminal = st.selectbox("Pilih Terminal", terminal_list)
 
-                    # Agregasi berdasarkan tanggal
-                    data_grouped = data.groupby('Date')['Value'].sum().reset_index()
+                    if selected_terminal:
+                        terminal_data = data[data['Terminal'] == selected_terminal]
+                        terminal_data = terminal_data.sort_values('Date')
 
-                    if data_grouped.empty:
-                        st.warning("Data kosong setelah agregasi. Tidak ada data untuk diproses.")
-                    else:
-                        # Pilih periode prediksi
-                        forecast_period = st.number_input("Masukkan periode prediksi (dalam bulan)", min_value=1, max_value=24, value=6, step=1)
+                        # Agregasi berdasarkan tanggal
+                        data_grouped = terminal_data.groupby('Date')['Value'].sum().reset_index()
 
-                        try:
-                            # Bangun model SARIMAX
-                            model = SARIMAX(data_grouped['Value'], order=(1, 1, 1), seasonal_order=(1, 1, 0, 12), enforce_stationarity=False, enforce_invertibility=False)
-                            results = model.fit()
+                        if data_grouped.empty:
+                            st.warning(f"Data kosong untuk terminal '{selected_terminal}'. Tidak ada data untuk diproses.")
+                        else:
+                            # Pilih periode prediksi
+                            forecast_period = st.number_input("Masukkan periode prediksi (dalam bulan)", min_value=1, max_value=24, value=6, step=1)
 
-                            # Prediksi ke depan
-                            future = results.get_forecast(steps=forecast_period)
-                            forecast = future.predicted_mean
-                            conf_int = future.conf_int()
+                            try:
+                                # Bangun model SARIMAX
+                                model = SARIMAX(data_grouped['Value'], order=(1, 1, 1), seasonal_order=(1, 1, 0, 12), enforce_stationarity=False, enforce_invertibility=False)
+                                results = model.fit()
 
-                            # Validasi indeks terakhir
-                            if len(data_grouped) == 0 or pd.isna(data_grouped['Date'].iloc[-1]):
-                                st.warning("Tidak dapat menentukan tanggal akhir data untuk prediksi.")
-                            else:
-                                # Tampilkan hasil prediksi
-                                forecast_dates = pd.date_range(start=data_grouped['Date'].iloc[-1], periods=forecast_period + 1, freq='M')[1:]
-                                forecast_df = pd.DataFrame({
-                                    'Date': forecast_dates,
-                                    'Predicted Value': forecast.values,
-                                    'Lower Bound': conf_int.iloc[:, 0].values,
-                                    'Upper Bound': conf_int.iloc[:, 1].values
-                                })
+                                # Prediksi ke depan
+                                future = results.get_forecast(steps=forecast_period)
+                                forecast = future.predicted_mean
+                                conf_int = future.conf_int()
 
-                                st.subheader("Hasil Prediksi")
-                                st.write(forecast_df)
+                                # Validasi indeks terakhir
+                                if len(data_grouped) == 0 or pd.isna(data_grouped['Date'].iloc[-1]):
+                                    st.warning(f"Tidak dapat menentukan tanggal akhir data untuk prediksi terminal '{selected_terminal}'.")
+                                else:
+                                    # Tampilkan hasil prediksi
+                                    forecast_dates = pd.date_range(start=data_grouped['Date'].iloc[-1], periods=forecast_period + 1, freq='M')[1:]
+                                    forecast_df = pd.DataFrame({
+                                        'Date': forecast_dates,
+                                        'Predicted Value': forecast.values,
+                                        'Lower Bound': conf_int.iloc[:, 0].values,
+                                        'Upper Bound': conf_int.iloc[:, 1].values
+                                    })
 
-                                # Visualisasi hasil prediksi
-                                fig = px.line(forecast_df, x='Date', y='Predicted Value', title="Prediksi Nilai Volume Non Petikemas",
-                                              labels={'Predicted Value': 'Value'})
-                                fig.add_scatter(x=forecast_df['Date'], y=forecast_df['Lower Bound'], mode='lines', name='Lower Bound', line=dict(dash='dot'))
-                                fig.add_scatter(x=forecast_df['Date'], y=forecast_df['Upper Bound'], mode='lines', name='Upper Bound', line=dict(dash='dot'))
-                                st.plotly_chart(fig, use_container_width=True)
+                                    st.subheader(f"Hasil Prediksi untuk Terminal '{selected_terminal}'")
+                                    st.write(forecast_df)
 
-                                # Unduh data prediksi
-                                csv = forecast_df.to_csv(index=False).encode('utf-8')
-                                st.download_button("Unduh Prediksi", data=csv, file_name="forecast_prediction.csv", mime="text/csv")
-                        except Exception as e:
-                            st.error(f"Terjadi kesalahan dalam proses prediksi: {e}")
+                                    # Visualisasi hasil prediksi
+                                    fig = px.line(forecast_df, x='Date', y='Predicted Value', title=f"Prediksi Nilai Volume Non Petikemas ({selected_terminal})",
+                                                  labels={'Predicted Value': 'Value'})
+                                    fig.add_scatter(x=forecast_df['Date'], y=forecast_df['Lower Bound'], mode='lines', name='Lower Bound', line=dict(dash='dot'))
+                                    fig.add_scatter(x=forecast_df['Date'], y=forecast_df['Upper Bound'], mode='lines', name='Upper Bound', line=dict(dash='dot'))
+                                    st.plotly_chart(fig, use_container_width=True)
+
+                                    # Unduh data prediksi
+                                    csv = forecast_df.to_csv(index=False).encode('utf-8')
+                                    st.download_button(f"Unduh Prediksi untuk Terminal '{selected_terminal}'", data=csv, file_name=f"forecast_{selected_terminal}.csv", mime="text/csv")
+                            except Exception as e:
+                                st.error(f"Terjadi kesalahan dalam proses prediksi: {e}")
