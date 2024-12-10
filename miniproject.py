@@ -35,7 +35,7 @@ warnings.filterwarnings('ignore')
 st.set_page_config(page_title="Analytical Dashboard TKMP Pelindo", layout="wide")
 
 # Header with logo and title
-st.image("pelindo_logo.jfif", use_column_width=True)  # Replace with the actual path to the Pelindo logo
+st.image("pelindo_logo.png", use_column_width=True)  # Replace with the actual path to the Pelindo logo
 st.title("Analytical Dashboard TKMP Pelindo")
 st.markdown("---")
 
@@ -77,9 +77,9 @@ def generate_ai_analysis(data, context):
     except Exception as e:
         return f"Terjadi kesalahan saat memproses analisis AI: {e}"
 
-# Dashboard
-if menu == "Dashboard":
-    st.title(f"Dashboard Data {category}")
+# Analisis Terminal
+if menu == "Analisis Terminal":
+    st.title(f"Analisis Terminal {category}")
     uploaded_file = st.file_uploader("Unggah File Data (.csv atau .xlsx)", type=["csv", "xlsx"])
 
     if uploaded_file is not None:
@@ -87,37 +87,30 @@ if menu == "Dashboard":
         if data is not None:
             st.write("Data berhasil dimuat!")
 
-            if 'Date' not in data.columns or 'Terminal' not in data.columns or 'Satuan' not in data.columns:
-                st.error("Kolom 'Date', 'Terminal', atau 'Satuan' tidak ditemukan pada file yang diunggah.")
+            if 'Terminal' not in data.columns or 'Value' not in data.columns:
+                st.error("Kolom 'Terminal' atau 'Value' tidak ditemukan pada file yang diunggah.")
             else:
-                data['Date'] = pd.to_datetime(data['Date'], format='%d/%m/%Y %H:%M', errors='coerce')
-                data = data.dropna(subset=['Date'])
-
-                # Pilihan terminal
                 terminal_list = data['Terminal'].unique()
                 selected_terminal = st.sidebar.selectbox("Pilih Terminal", terminal_list)
 
                 if selected_terminal:
-                    data_filtered = data[data['Terminal'] == selected_terminal]
+                    terminal_data = data[data['Terminal'] == selected_terminal]
 
-                    # Pilihan satuan
-                    satuan_list = data_filtered['Satuan'].unique()
-                    selected_satuan = st.sidebar.selectbox("Pilih Satuan", satuan_list)
-
-                    if selected_satuan:
-                        data_filtered = data_filtered[data_filtered['Satuan'] == selected_satuan]
-                        st.write(f"Data Terminal {selected_terminal} (Satuan: {selected_satuan})")
-                        st.write(data_filtered)
+                    if terminal_data.empty:
+                        st.warning(f"Tidak ada data untuk terminal '{selected_terminal}'.")
+                    else:
+                        st.write(f"Data untuk Terminal '{selected_terminal}':")
+                        st.write(terminal_data)
 
                         # Tombol untuk Analisis AI
-                        if st.button(f"Generate AI Analysis - Dashboard ({category})"):
-                            ai_analysis = generate_ai_analysis(data_filtered, f"Dashboard - Analisis Data {category}")
+                        if st.button(f"Generate AI Analysis - Terminal ({category})"):
+                            ai_analysis = generate_ai_analysis(terminal_data, f"Analisis Terminal {category}")
                             st.subheader("Hasil Analisis AI:")
                             st.write(ai_analysis)
 
-# Visualisasi Berdasarkan Kategori
-elif menu == "Visualisasi Berdasarkan Kategori":
-    st.title(f"Visualisasi Berdasarkan Kategori {category}")
+# Prediction
+elif menu == "Prediction":
+    st.title(f"Prediksi Data {category}")
     uploaded_file = st.file_uploader("Unggah File Data (.csv atau .xlsx)", type=["csv", "xlsx"])
 
     if uploaded_file is not None:
@@ -125,22 +118,46 @@ elif menu == "Visualisasi Berdasarkan Kategori":
         if data is not None:
             st.write("Data berhasil dimuat!")
 
-            if category == "Petikemas":
-                kategori_list = ['JenisPerdagangan', 'JenisKegiatan', 'IsiKargo', 'TipePetiKemas', 'UkuranPetiKemas']
+            if 'Date' not in data.columns or 'Value' not in data.columns:
+                st.error("Kolom 'Date' atau 'Value' tidak ditemukan pada file yang diunggah.")
             else:
-                kategori_list = ['JenisKargo', 'JenisKemasan', 'JenisKegiatan']
+                data['Date'] = pd.to_datetime(data['Date'], format='%d/%m/%Y %H:%M', errors='coerce')
+                data_grouped = data.groupby('Date')['Value'].sum().reset_index()
 
-            selected_kategori = st.sidebar.selectbox("Pilih Kategori", kategori_list)
+                if len(data_grouped) < 12:
+                    st.error("Data terlalu sedikit untuk prediksi. Tambahkan data dengan rentang waktu yang lebih panjang.")
+                else:
+                    forecast_period = st.number_input("Masukkan periode prediksi (dalam bulan)", min_value=1, max_value=24, value=6, step=1)
 
-            if selected_kategori in data.columns:
-                category_data = data.groupby(selected_kategori)['Value'].sum().reset_index()
-                st.subheader(f"Volume Berdasarkan {selected_kategori}")
-                fig = px.pie(category_data, values='Value', names=selected_kategori, template='plotly_white')
-                st.plotly_chart(fig, use_container_width=True)
+                    try:
+                        model = SARIMAX(data_grouped['Value'], order=(1, 1, 1), seasonal_order=(1, 1, 0, 12),
+                                        enforce_stationarity=False, enforce_invertibility=False)
+                        results = model.fit()
 
-                # Tombol untuk Analisis AI
-                if st.button(f"Generate AI Analysis - {selected_kategori} ({category})"):
-                    ai_analysis = generate_ai_analysis(category_data, f"Visualisasi Berdasarkan {selected_kategori} ({category})")
-                    st.subheader("Hasil Analisis AI:")
-                    st.write(ai_analysis)
+                        future = results.get_forecast(steps=forecast_period)
+                        forecast = future.predicted_mean
+                        conf_int = future.conf_int()
 
+                        forecast_dates = pd.date_range(start=data_grouped['Date'].iloc[-1], periods=forecast_period + 1, freq='M')[1:]
+                        forecast_df = pd.DataFrame({
+                            'Date': forecast_dates,
+                            'Predicted Value': forecast.values,
+                            'Lower Bound': conf_int.iloc[:, 0].values,
+                            'Upper Bound': conf_int.iloc[:, 1].values
+                        })
+
+                        st.subheader("Hasil Prediksi")
+                        st.write(forecast_df)
+
+                        fig = px.line(forecast_df, x='Date', y='Predicted Value', title=f"Prediksi Data {category}")
+                        fig.add_scatter(x=forecast_df['Date'], y=forecast_df['Lower Bound'], mode='lines', name='Lower Bound', line=dict(dash='dot'))
+                        fig.add_scatter(x=forecast_df['Date'], y=forecast_df['Upper Bound'], mode='lines', name='Upper Bound', line=dict(dash='dot'))
+                        st.plotly_chart(fig, use_container_width=True)
+
+                        # Tombol untuk Analisis AI
+                        if st.button(f"Generate AI Analysis - Prediction ({category})"):
+                            ai_analysis = generate_ai_analysis(forecast_df, f"Prediksi Data {category}")
+                            st.subheader("Hasil Analisis AI:")
+                            st.write(ai_analysis)
+                    except Exception as e:
+                        st.error(f"Terjadi kesalahan dalam proses prediksi: {e}")
