@@ -96,6 +96,7 @@ elif menu == "Visualisasi Berdasarkan Kategori":
                 st.plotly_chart(fig, use_container_width=True)
 
 
+
 # Prediction
 elif menu == "Prediction":
     st.title("Prediksi Data Non Petikemas")
@@ -111,7 +112,7 @@ elif menu == "Prediction":
                 st.error("Kolom 'Date' tidak ditemukan pada file yang diunggah. Harap pastikan file memiliki kolom 'Date'.")
             else:
                 # Konversi kolom 'Date' ke format datetime
-                data['Date'] = pd.to_datetime(data['Date'], format='%d/%m/%Y %H:%M:%S', errors='coerce')
+                data['Date'] = pd.to_datetime(data['Date'], format='%d/%m/%Y %H:%M', errors='coerce')
                 
                 # Hapus baris dengan tanggal tidak valid
                 data = data.dropna(subset=['Date'])
@@ -169,5 +170,3 @@ elif menu == "Prediction":
                                 st.download_button("Unduh Prediksi", data=csv, file_name="forecast_prediction.csv", mime="text/csv")
                         except Exception as e:
                             st.error(f"Terjadi kesalahan dalam proses prediksi: {e}")
-
-
