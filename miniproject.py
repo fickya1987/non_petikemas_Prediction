@@ -162,3 +162,4 @@ elif menu == "Prediction":
                             st.download_button("Unduh Prediksi", data=csv, file_name="forecast_prediction.csv", mime="text/csv")
                     except Exception as e:
                         st.error(f"Terjadi kesalahan dalam proses prediksi: {e}")
+
