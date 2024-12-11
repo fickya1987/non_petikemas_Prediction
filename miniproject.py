@@ -288,7 +288,6 @@ elif menu == "Prediction":
                                         st.error(f"Terjadi kesalahan dalam proses prediksi: {e}")
 
 
-
 # Preprocessing
 elif menu == "Preprocessing":
     st.title("Preprocessing Data Petikemas")
