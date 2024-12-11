@@ -287,5 +287,28 @@ elif menu == "Prediction":
                                     except Exception as e:
                                         st.error(f"Terjadi kesalahan dalam proses prediksi: {e}")
 
-                
+
+
+# Preprocessing
+elif menu == "Preprocessing":
+    st.title("Preprocessing Data Petikemas")
+    uploaded_file = st.file_uploader("Unggah File Data (.csv atau .xlsx)", type=["csv", "xlsx"])
+
+    if uploaded_file is not None:
+        data = load_data(uploaded_file)
+        if data is not None:
+            st.write("Data asli:")
+            st.write(data.head())
+
+            try:
+                preprocessed_data = preprocess_data(data)
+                st.write("Data setelah preprocessing:")
+                st.write(preprocessed_data.head())
+
+                # Unduh data hasil preprocessing
+                csv = preprocessed_data.to_csv(index=False).encode('utf-8')
+                st.download_button(label="Unduh Data Preprocessed", data=csv, file_name="preprocessed_data.csv", mime="text/csv")
+            except Exception as e:
+                st.error(f"Kesalahan selama preprocessing: {e}")
+
 
