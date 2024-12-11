@@ -245,88 +245,62 @@ elif menu == "Visualisasi Berdasarkan Kategori":
 
 # Prediction
 elif menu == "Prediction":
-    st.title("Prediksi Data Non Petikemas per Terminal dan Satuan")
+    st.title("Prediksi Data Petikemas")
     uploaded_file = st.file_uploader("Unggah File Data (.csv atau .xlsx)", type=["csv", "xlsx"])
 
     if uploaded_file is not None:
         data = load_data(uploaded_file)
         if data is not None:
             st.write("Data berhasil dimuat!")
+            data = preprocess_data(data)
 
-            # Validasi kolom wajib
-            required_columns = ['Date', 'Terminal', 'Satuan', 'Value']
-            missing_columns = [col for col in required_columns if col not in data.columns]
-            if missing_columns:
-                st.error(f"Kolom berikut tidak ditemukan: {', '.join(missing_columns)}")
+            if 'Date' not in data.columns or 'Value' not in data.columns:
+                st.error("Kolom 'Date' atau 'Value' tidak ditemukan pada file yang diunggah.")
             else:
-                # Konversi 'Date' ke format datetime
-                data['Date'] = pd.to_datetime(data['Date'], format='%d/%m/%Y %H:%M', errors='coerce')
-                data = data.dropna(subset=['Date'])
+                data_grouped = data.groupby('Date')['Value'].sum().reset_index()
 
-                if data.empty:
-                    st.warning("Data kosong setelah diproses. Periksa format file yang diunggah.")
+                if len(data_grouped) < 12:
+                    st.error("Data terlalu sedikit untuk prediksi. Tambahkan data dengan rentang waktu yang lebih panjang.")
                 else:
-                    # Filter berdasarkan satuan
-                    satuan_list = data['Satuan'].unique()
-                    selected_satuan = st.sidebar.selectbox("Pilih Satuan", satuan_list)
+                    forecast_period = st.number_input("Masukkan periode prediksi (dalam bulan)", min_value=1, max_value=24, value=6, step=1)
 
-                    if selected_satuan:
-                        data_satuan = data[data['Satuan'] == selected_satuan]
+                    try:
+                        model = SARIMAX(data_grouped['Value'], order=(1, 1, 1), seasonal_order=(1, 1, 0, 12),
+                                        enforce_stationarity=False, enforce_invertibility=False)
+                        results = model.fit()
 
-                        # Filter berdasarkan terminal
-                        terminal_list = data_satuan['Terminal'].unique()
-                        selected_terminal = st.selectbox("Pilih Terminal", terminal_list)
+                        future = results.get_forecast(steps=forecast_period)
+                        forecast = future.predicted_mean
+                        conf_int = future.conf_int()
 
-                        if selected_terminal:
-                            terminal_data = data_satuan[data_satuan['Terminal'] == selected_terminal]
-                            terminal_data = terminal_data.sort_values('Date')
+                        forecast_dates = pd.date_range(start=data_grouped['Date'].iloc[-1], periods=forecast_period + 1, freq='M')[1:]
+                        forecast_df = pd.DataFrame({
+                            'Date': forecast_dates,
+                            'Predicted Value': forecast.values,
+                            'Lower Bound': conf_int.iloc[:, 0].values,
+                            'Upper Bound': conf_int.iloc[:, 1].values
+                        })
 
-                            # Agregasi berdasarkan tanggal
-                            data_grouped = terminal_data.groupby('Date')['Value'].sum().reset_index()
+                        # Terapkan batasan pada nilai prediksi
+                        forecast_df['Predicted Value'] = forecast_df['Predicted Value'].apply(lambda x: max(x, 0))
+                        forecast_df['Lower Bound'] = forecast_df['Lower Bound'].apply(lambda x: max(x, 0))
+                        forecast_df['Upper Bound'] = forecast_df['Upper Bound'].apply(lambda x: max(x, 0))
 
-                            if data_grouped.empty:
-                                st.warning(f"Data kosong untuk terminal '{selected_terminal}' dengan satuan '{selected_satuan}'.")
-                            else:
-                                # Validasi jumlah data untuk prediksi
-                                if len(data_grouped) < 12:
-                                    st.error("Data terlalu sedikit untuk prediksi. Tambahkan data dengan rentang waktu yang lebih panjang.")
-                                else:
-                                    forecast_period = st.number_input("Masukkan periode prediksi (dalam bulan)", min_value=1, max_value=24, value=6, step=1)
+                        st.subheader("Hasil Prediksi")
+                        st.write(forecast_df)
 
-                                    try:
-                                        # Bangun model SARIMAX
-                                        model = SARIMAX(data_grouped['Value'], order=(1, 1, 1), seasonal_order=(1, 1, 0, 12), enforce_stationarity=False, enforce_invertibility=False)
-                                        results = model.fit()
+                        fig = px.line(forecast_df, x='Date', y='Predicted Value', title="Prediksi Data Petikemas")
+                        fig.add_scatter(x=forecast_df['Date'], y=forecast_df['Lower Bound'], mode='lines', name='Lower Bound', line=dict(dash='dot'))
+                        fig.add_scatter(x=forecast_df['Date'], y=forecast_df['Upper Bound'], mode='lines', name='Upper Bound', line=dict(dash='dot'))
+                        st.plotly_chart(fig, use_container_width=True)
 
-                                        # Prediksi ke depan
-                                        future = results.get_forecast(steps=forecast_period)
-                                        forecast = future.predicted_mean
-                                        conf_int = future.conf_int()
+                        if st.button("Generate AI Analysis - Prediction"):
+                            ai_analysis = generate_ai_analysis(forecast_df, "Prediksi Data Petikemas")
+                            st.subheader("Hasil Analisis AI:")
+                            st.write(ai_analysis)
+                    except Exception as e:
+                        st.error(f"Terjadi kesalahan dalam proses prediksi: {e}")
 
-                                        forecast_dates = pd.date_range(start=data_grouped['Date'].iloc[-1], periods=forecast_period + 1, freq='M')[1:]
-                                        forecast_df = pd.DataFrame({
-                                            'Date': forecast_dates,
-                                            'Predicted Value': forecast.values,
-                                            'Lower Bound': conf_int.iloc[:, 0].values,
-                                            'Upper Bound': conf_int.iloc[:, 1].values
-                                        })
-
-                                        st.subheader(f"Hasil Prediksi untuk Terminal '{selected_terminal}' (Satuan: {selected_satuan})")
-                                        st.write(forecast_df)
-
-                                        # Visualisasi hasil prediksi
-                                        fig = px.line(forecast_df, x='Date', y='Predicted Value', title=f"Prediksi ({selected_terminal}, {selected_satuan})")
-                                        fig.add_scatter(x=forecast_df['Date'], y=forecast_df['Lower Bound'], mode='lines', name='Lower Bound', line=dict(dash='dot'))
-                                        fig.add_scatter(x=forecast_df['Date'], y=forecast_df['Upper Bound'], mode='lines', name='Upper Bound', line=dict(dash='dot'))
-                                        st.plotly_chart(fig, use_container_width=True)
-
-                                        # Tombol untuk Analisis AI
-                                        if st.button("Generate AI Analysis - Prediction"):
-                                            ai_analysis = generate_ai_analysis(forecast_df, f"Prediksi untuk Terminal {selected_terminal} (Satuan: {selected_satuan})")
-                                            st.subheader("Hasil Analisis AI:")
-                                            st.write(ai_analysis)
-                                    except Exception as e:
-                                        st.error(f"Terjadi kesalahan dalam proses prediksi: {e}")
 
 
 # Preprocessing
