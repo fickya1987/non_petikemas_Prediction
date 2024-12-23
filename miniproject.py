@@ -245,7 +245,7 @@ elif menu == "Visualisasi Berdasarkan Kategori":
 
 # Prediction
 elif menu == "Prediction":
-    st.title("Prediksi Data Petikemas")
+    st.title("Prediksi Data Non Petikemas")
     uploaded_file = st.file_uploader("Unggah File Data (.csv atau .xlsx)", type=["csv", "xlsx"])
 
     if uploaded_file is not None:
